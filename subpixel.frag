@@ -1,3 +1,6 @@
+// Subpixel filtering - a mix of nearest neighbor and bilinear that reduces
+// jittering for pixelart.
+
 #pragma language glsl3
 
 uniform vec2 textureSize;
@@ -8,6 +11,10 @@ vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
     uv /= scale;
     vec2 texel_size = vec2(1.0) / textureSize;
 
+    vec2 xy = uv * textureSize;
+    vec2 xy_center = floor(xy) + 0.5;
+    xy_center += 1.0 - clamp((1.0 - fract(xy)) * scale, 0.0, 1.0);
+    return color * texture2D(tex, xy_center / textureSize);
     // uv -= texelSize * vec2(0.5);
     // vec2 uvPixels = uv * textureSize;
     // vec2 deltaPixel = fract(uvPixels) - vec2(0.5);
@@ -15,22 +22,22 @@ vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
     // vec2 mip = log2(ddxy) - 0.5;
     // return color * textureLod(tex, uv + (clamp(deltaPixel / ddxy, 0.0, 1.0) - deltaPixel) * texelSize, min(mip.x, mip.y));
 
-    vec2 ddx = dFdx(uv);
-    vec2 ddy = dFdy(uv);
-    vec2 lxy = sqrt(ddx * ddx + ddy * ddy); // size of the screen pixel in uv
+    // vec2 ddx = dFdx(uv);
+    // vec2 ddy = dFdy(uv);
+    // vec2 lxy = sqrt(ddx * ddx + ddy * ddy); // size of the screen pixel in uv
 
-    vec2 xy = uv * textureSize;
-    vec2 xy_floor = round(xy) - vec2(0.5);
-    vec2 f = xy - xy_floor;
-    vec2 f_uv = f * texel_size - vec2(0.5) * texel_size;
+    // vec2 xy = uv * textureSize;
+    // vec2 xy_floor = round(xy) - vec2(0.5);
+    // vec2 f = xy - xy_floor;
+    // vec2 f_uv = f * texel_size - vec2(0.5) * texel_size;
 
-    f = clamp(f_uv / lxy + vec2(0.5), 0.0, 1.0);
+    // f = clamp(f_uv / lxy + vec2(0.5), 0.0, 1.0);
 
-    uv = xy_floor * texel_size;
+    // uv = xy_floor * texel_size;
 
-    // Since we already have the derivatives, might as well use textureGrad
-    // instead of texture2D to improve performance. No other reason.
-    return textureGrad(tex, uv + f * texel_size, ddx, ddy);
+    // // Since we already have the derivatives, might as well use textureGrad
+    // // instead of texture2D to improve performance. No other reason.
+    // return textureGrad(tex, uv + f * texel_size, ddx, ddy);
 
 
     /*// Calculate xmin, xmax, ymin and ymax using the gradients

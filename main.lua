@@ -14,8 +14,8 @@ shaders.subpixel.next = "none"
 shaders.none.next = "bilinear"
 shaders.bilinear.next = "subpixel"
 
-shader_name = "bilinear"
-filter = "nearest"
+shader_name = "subpixel"
+filter = "linear"
 
 function love.load()
    sprite = lg.newImage("gnippie.png")

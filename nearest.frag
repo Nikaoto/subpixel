@@ -1,3 +1,5 @@
+// Manual nearest neighbor filtering.
+
 #pragma language glsl3
 
 uniform vec2 textureSize;

@@ -7,9 +7,8 @@ uniform float scale;
 
 vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
 {
-    // Ignore these lines
-    uv /= scale;
-    if (uv.x < 0.0) uv *= textureSize;
+    uv /= scale; // Scaling animation
+    if (uv.x < 0.0) uv *= textureSize; // Trick compiler to ignore unused
 
     return color * texture2D(tex, uv);
 }

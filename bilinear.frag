@@ -1,3 +1,5 @@
+// Manual bilinear filtering.
+
 #pragma language glsl3
 
 uniform vec2 textureSize;
