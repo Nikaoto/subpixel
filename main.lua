@@ -6,18 +6,21 @@ shader = nil
 move = true
 
 shaders = {
-   subpixel = { sh = lg.newShader("subpixel.frag") },
-   none = { sh = lg.newShader("default.frag") },
-   bilinear = { sh = lg.newShader("bilinear.frag") },
+   subpixel = { sh = lg.newShader("subpixel.frag", "scale.vert") },
+   subpixel_d7samurai = { sh = lg.newShader("subpixel_d7samurai.frag", "scale.vert") },
+   none = { sh = lg.newShader("default.frag", "scale.vert") },
+   bilinear = { sh = lg.newShader("bilinear.frag", "scale.vert") },
 }
-shaders.subpixel.next = "none"
+shaders.subpixel.next = "subpixel_d7samurai"
+shaders.subpixel_d7samurai.next = "none"
 shaders.none.next = "bilinear"
 shaders.bilinear.next = "subpixel"
 
 shader_name = "subpixel"
-filter = "linear"
+filter = "nearest"
 
 function love.load()
+   lg.setDefaultFilter("nearest", "nearest")
    sprite = lg.newImage("gnippie.png")
    sprite:setFilter("nearest", "nearest")
    love.window.setMode(gw, gh)
@@ -65,7 +68,8 @@ function love.draw()
    lg.clear(1, 1, 1, 1)
    local time = love.timer.getTime()
 
-   local x, y, scale
+   local scale = 1
+   local x, y
    if move then
       x = gw/4 + math.sin(time) * 10
       y = math.sin(time*2 + 10) * 10
@@ -80,12 +84,19 @@ function love.draw()
    if sh then
       lg.setShader(sh)
       sh:send("textureSize", {canvas:getWidth(), canvas:getHeight()})
-      sh:send("scale", scale)
+      sh:send("scale", 1)
+      sh:send("vertScale", {scale,scale})
    end
 
    -- Draw sprite
    lg.setColor(1, 1, 1, 1)
-   lg.draw(canvas, 0, 80)
+   lg.draw(
+      canvas,
+      0,0,--gw/2, gh/2,
+      0,--math.sin(time/10) * math.pi*2,
+      1, 1,
+      0,0 --canvas:getWidth()/2, canvas:getHeight()/2
+   )
 
    if sh then
       lg.setShader()
