@@ -3,30 +3,30 @@
 
 #pragma language glsl3
 
-uniform vec2 textureSize;
+uniform vec2 texture_size;
 uniform float scale;
 
 vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
 {
     uv /= scale;
-    vec2 texel_size = vec2(1.0) / textureSize;
+    vec2 texel_size = vec2(1.0) / texture_size;
 
-    vec2 xy = uv * textureSize;
+    vec2 xy = uv * texture_size;
     vec2 xy_center = floor(xy) + 0.5;
     xy_center += 1.0 - clamp((1.0 - fract(xy)) * scale, 0.0, 1.0);
-    return color * texture2D(tex, xy_center / textureSize);
-    // uv -= texelSize * vec2(0.5);
-    // vec2 uvPixels = uv * textureSize;
+    return color * texture2D(tex, xy_center / texture_size);
+    // uv -= texel_size * vec2(0.5);
+    // vec2 uvPixels = uv * texture_size;
     // vec2 deltaPixel = fract(uvPixels) - vec2(0.5);
     // vec2 ddxy = fwidth(uvPixels);
     // vec2 mip = log2(ddxy) - 0.5;
-    // return color * textureLod(tex, uv + (clamp(deltaPixel / ddxy, 0.0, 1.0) - deltaPixel) * texelSize, min(mip.x, mip.y));
+    // return color * textureLod(tex, uv + (clamp(deltaPixel / ddxy, 0.0, 1.0) - deltaPixel) * texel_size, min(mip.x, mip.y));
 
     // vec2 ddx = dFdx(uv);
     // vec2 ddy = dFdy(uv);
     // vec2 lxy = sqrt(ddx * ddx + ddy * ddy); // size of the screen pixel in uv
 
-    // vec2 xy = uv * textureSize;
+    // vec2 xy = uv * texture_size;
     // vec2 xy_floor = round(xy) - vec2(0.5);
     // vec2 f = xy - xy_floor;
     // vec2 f_uv = f * texel_size - vec2(0.5) * texel_size;
@@ -43,20 +43,20 @@ vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
     /*// Calculate xmin, xmax, ymin and ymax using the gradients
     float umin = uv.x - 0.5 * dFdx(uv).x;
     float umax = uv.x + 0.5 * dFdx(uv).x;
-    float xmin = umin * textureSize.x;
-    float xmax = umax * textureSize.x;
+    float xmin = umin * texture_size.x;
+    float xmax = umax * texture_size.x;
     float vmin = uv.y - 0.5 * dFdy(uv).y;
     float vmax = uv.y + 0.5 * dFdy(uv).y;
-    float ymin = vmin * textureSize.y;
-    float ymax = vmax * textureSize.y;
+    float ymin = vmin * texture_size.y;
+    float ymax = vmax * texture_size.y;
 
     // Preconditioning the uv coordinates
     if (floor(xmin) == floor(xmax))
-        uv.x = (floor(uv.x * textureSize.x) + 0.5) / textureSize.x;
+        uv.x = (floor(uv.x * texture_size.x) + 0.5) / texture_size.x;
     if (floor(ymin) == floor(ymax))
-        uv.y = (floor(uv.y * textureSize.y) + 0.5) / textureSize.y;
+        uv.y = (floor(uv.y * texture_size.y) + 0.5) / texture_size.y;
 
-    vec2 f = fract(textureSize * uv);
+    vec2 f = fract(texture_size * uv);
 
     // Offsets for the four closest texels
     vec2 off;
@@ -74,7 +74,7 @@ vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
     else
         off.y = 0.0;
 
-    off *= texelSize;
+    off *= texel_size;
 
     // Sample four neighboring texels
     vec4 p00 = texture2D(tex, uv);

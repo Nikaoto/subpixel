@@ -36,6 +36,19 @@ function love.load()
       lg.setColor(1, 1, 1, 1)
       lg.draw(sprite, 0, 0)
    end)
+
+   -- Draw sprite onto texture (this pads the sprite)
+   canvas_right = lg.newCanvas(gw, gh)
+   local filter_right = filter == "nearest" and "linear" or "nearest"
+   canvas_right:setFilter(filter_right, filter_right)
+   canvas_right:renderTo(function()
+      local m, am = lg.getBlendMode()
+      lg.setBlendMode("replace")
+      lg.clear(0, 0, 0, 0)
+      lg.setBlendMode(m, am)
+      lg.setColor(1, 1, 1, 1)
+      lg.draw(sprite, 0, 0)
+   end)
 end
 
 function love.resize(w, h)
@@ -48,6 +61,7 @@ end
 
 function love.keypressed(k)
    if k == "1" then
+      canvas_right:setFilter(filter, filter)
       filter = filter == "linear" and "nearest" or "linear"
       canvas:setFilter(filter, filter)
       return
@@ -81,26 +95,45 @@ function love.draw()
    end
 
    local sh = shaders[shader_name].sh
-   if sh then
-      lg.setShader(sh)
-      sh:send("textureSize", {canvas:getWidth(), canvas:getHeight()})
-      sh:send("scale", 1)
-      sh:send("vertScale", {scale,scale})
-   end
+   lg.setShader(sh)
+   sh:send("texture_size", {canvas:getWidth(), canvas:getHeight()})
+   sh:send("scale", 10)
+   sh:send("vertScale", {1, 1})
 
-   -- Draw sprite
+   -- Zoom screen
+   lg.push()
+   local s = math.sin(time * 0.3) + 1.1
+   lg.scale(s)
+   lg.translate(1/s * gw/2 - gw/2, 1/s * gh/2 - gh/2)
+
+   -- Draw left side
    lg.setColor(1, 1, 1, 1)
    lg.draw(
       canvas,
-      0,0,--gw/2, gh/2,
+      0, 0, --x,y
       0,--math.sin(time/10) * math.pi*2,
       1, 1,
-      0,0 --canvas:getWidth()/2, canvas:getHeight()/2
+      0, 0 --canvas:getWidth()/2, canvas:getHeight()/2
    )
 
-   if sh then
-      lg.setShader()
-   end
+   -- Draw right side
+   lg.setColor(1, 1, 1, 1)
+   lg.draw(
+      canvas_right,
+      gw/2, 0,
+      0,--math.sin(time/10) * math.pi*2,
+      -1, 1,
+      canvas:getWidth()/2, 0 --/2, canvas:getHeight()/2
+   )
+   lg.pop()
+
+
+   lg.setShader()
+
+   -- Draw separating line
+   local t = 1
+   lg.setColor(0, 0, 0, 1)
+   lg.rectangle("fill", gw/2 - t, 0, t*2, gh)
 
    -- Print info
    lg.setColor(66/255, 135/255, 245/255, 1)   

@@ -2,23 +2,23 @@
 
 #pragma language glsl3
 
-uniform vec2 textureSize;
+uniform vec2 texture_size;
 uniform float scale;
 
 vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
 {
     uv /= scale;
 
-    vec2 texelSize = 1.0 / textureSize;
+    vec2 texel_size = 1.0 / texture_size;
 
-    vec2 xy = uv * textureSize - 0.5;
+    vec2 xy = uv * texture_size - 0.5;
     vec2 xy_floor = floor(xy);
     vec2 f = fract(xy);
 
-    vec4 p00 = texture2D(tex, (xy_floor + vec2(0.0, 0.0) + 0.5) * texelSize);
-    vec4 p10 = texture2D(tex, (xy_floor + vec2(1.0, 0.0) + 0.5) * texelSize);
-    vec4 p01 = texture2D(tex, (xy_floor + vec2(0.0, 1.0) + 0.5) * texelSize);
-    vec4 p11 = texture2D(tex, (xy_floor + vec2(1.0, 1.0) + 0.5) * texelSize);
+    vec4 p00 = texture2D(tex, (xy_floor + vec2(0.0, 0.0) + 0.5) * texel_size);
+    vec4 p10 = texture2D(tex, (xy_floor + vec2(1.0, 0.0) + 0.5) * texel_size);
+    vec4 p01 = texture2D(tex, (xy_floor + vec2(0.0, 1.0) + 0.5) * texel_size);
+    vec4 p11 = texture2D(tex, (xy_floor + vec2(1.0, 1.0) + 0.5) * texel_size);
 
     vec4 pX0 = mix(p00, p10, f.x);
     vec4 pX1 = mix(p01, p11, f.x);
