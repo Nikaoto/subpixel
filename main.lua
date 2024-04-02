@@ -1,8 +1,8 @@
 lg = love.graphics
 fmt = string.format
-gw = 1024
-gh = 768
-shader = nil
+gw = 1280
+gh = 720
+
 move = true
 
 shaders = {
@@ -16,39 +16,48 @@ shaders.subpixel_d7samurai.next = "none"
 shaders.none.next = "bilinear"
 shaders.bilinear.next = "subpixel"
 
-shader_name = "subpixel"
-filter = "nearest"
+left_side = {
+   filter = "nearest",
+   shader_name = "none",
+   sprite = lg.newImage("gnippie.png"),
+   padded_sprite = nil,
+}
+
+right_side = {
+   filter = "linear",
+   shader_name = "subpixel-d7samurai",
+   sprite = lg.newImage("gnippie.png"),
+   padded_sprite = nil,
+}
+
+function pad_texture(tex, pad)
+   pad = math.floor(pad) -- padding amount
+
+   -- Make new texture
+   local canvas = lg.newCanvas(
+      tex:getWidth() + pad * 2,
+      tex:getHeight() + pad * 2
+   )
+
+   -- Draw onto new texture
+   canvas:renderTo(function()
+      local mode, alpha_mode = lg.getBlendMode()
+      lg.setBlendMode("replace")
+      lg.clear(0, 0, 0, 0)
+      lg.setBlendMode(mode, alpha_mode)
+      lg.setColor(1, 1, 1, 1)
+      lg.draw(tex, pad, pad)
+   end)
+
+   return canvas
+end
 
 function love.load()
-   lg.setDefaultFilter("nearest", "nearest")
-   sprite = lg.newImage("gnippie.png")
-   sprite:setFilter("nearest", "nearest")
    love.window.setMode(gw, gh)
 
-   -- Draw sprite onto texture (this pads the sprite)
-   canvas = lg.newCanvas(gw, gh)
-   canvas:setFilter(filter, filter)
-   canvas:renderTo(function()
-      local m, am = lg.getBlendMode()
-      lg.setBlendMode("replace")
-      lg.clear(0, 0, 0, 0)
-      lg.setBlendMode(m, am)
-      lg.setColor(1, 1, 1, 1)
-      lg.draw(sprite, 0, 0)
-   end)
-
-   -- Draw sprite onto texture (this pads the sprite)
-   canvas_right = lg.newCanvas(gw, gh)
-   local filter_right = filter == "nearest" and "linear" or "nearest"
-   canvas_right:setFilter(filter_right, filter_right)
-   canvas_right:renderTo(function()
-      local m, am = lg.getBlendMode()
-      lg.setBlendMode("replace")
-      lg.clear(0, 0, 0, 0)
-      lg.setBlendMode(m, am)
-      lg.setColor(1, 1, 1, 1)
-      lg.draw(sprite, 0, 0)
-   end)
+   -- Make 1px padded versions of the sprites
+   left_side.padded_sprite = pad_texture(left_side.sprite, 1)
+   right_side.padded_sprite = pad_texture(right_side.sprite, 1)
 end
 
 function love.resize(w, h)
@@ -59,19 +68,36 @@ end
 function love.update(dt)
 end
 
+function love.draw_info()
+   lg.setColor(66/255, 135/255, 245/255, 1)   
+   lg.print(
+      fmt("1) texture_filter: %s\n", canvas:getFilter()) ..
+      fmt("2) shader: %s\n", shader_name) ..
+      fmt("3) move: %s\n", move),
+      5, 5
+   )
+end
+
 function love.keypressed(k)
+   local mx, my = love.mouse.getPosition()
+
+   local side = (mx <= gw/2) and left_side or right_side
+
+   -- Cycle love2d's filter (love2d only offers nearest/linear)
    if k == "1" then
-      canvas_right:setFilter(filter, filter)
-      filter = filter == "linear" and "nearest" or "linear"
-      canvas:setFilter(filter, filter)
+      side.filter = (sidel.filter == "linear") and "nearest" or "linear"
+      side.sprite:setFilter(side.filter, side.filter)
+      side.padded_sprite:setFilter(side.filter, side.filter)
       return
    end
 
+   -- Cycle shader
    if k == "2" then
-      shader_name = shaders[shader_name].next
+      side.shader_name = shaders[shader_name].next
       return
    end
 
+   -- Change animation/demo
    if k == "3" then
       move = not move
       return
@@ -135,12 +161,5 @@ function love.draw()
    lg.setColor(0, 0, 0, 1)
    lg.rectangle("fill", gw/2 - t, 0, t*2, gh)
 
-   -- Print info
-   lg.setColor(66/255, 135/255, 245/255, 1)   
-   lg.print(
-      fmt("1) texture_filter: %s\n", canvas:getFilter()) ..
-      fmt("2) shader: %s\n", shader_name) ..
-      fmt("3) move: %s\n", move),
-      5, 5
-   )
+   draw_info()
 end
