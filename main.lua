@@ -2,7 +2,7 @@ lg = love.graphics
 fmt = string.format
 gw = 1280
 gh = 720
-base_scale = 10
+base_scale = 4
 vert_tile_margin = 280
 horiz_tile_margin = 220
 horiz_tile = 3
@@ -15,38 +15,44 @@ text_box_color_hovered = {1, 0.85, 0.7, 0.9}
 text_box_color_unhovered = {1, 0.85, 0.7, 0.5}
 
 shaders = {
-   subpixel = { sh = lg.newShader("subpixel.frag", "scale.vert") },
-   subpixel_d7samurai = { sh = lg.newShader("subpixel_d7samurai.frag", "scale.vert") },
-   none = { sh = lg.newShader("default.frag", "scale.vert") },
-   bilinear = { sh = lg.newShader("bilinear.frag", "scale.vert") },
+   subpixel = { sh = lg.newShader("subpixel.frag") },
+   subpixel_lod = { sh = lg.newShader("subpixel_lod.frag") },
+   subpixel_d7samurai = { sh = lg.newShader("subpixel_d7samurai.frag") },
+   none = { sh = lg.newShader("default.frag") },
+   bilinear = { sh = lg.newShader("bilinear.frag") },
 }
-shaders.subpixel.next = "subpixel_d7samurai"
+shaders.subpixel.next = "subpixel_lod"
+shaders.subpixel_lod.next = "subpixel_d7samurai"
 shaders.subpixel_d7samurai.next = "none"
 shaders.none.next = "bilinear"
 shaders.bilinear.next = "subpixel"
 
 scaling_methods = {
-   ["vertex_shader"] = {},
    ["love.graphics.draw"] = {},
    ["love.graphics.scale"] = {},
    ["none"] = {},
 }
-scaling_methods["vertex_shader"].next = "love.graphics.draw"
 scaling_methods["love.graphics.draw"].next = "love.graphics.scale"
 scaling_methods["love.graphics.scale"].next = "none"
-scaling_methods["none"].next = "vertex_shader"
+scaling_methods["none"].next = "love.graphics.draw"
 
 movement_methods = {
-   ["vertex_shader"] = {},
    ["love.graphics.draw"] = {},
    ["love.graphics.translate"] = {},
    ["none"] = {},
 }
-movement_methods["vertex_shader"].next = "love.graphics.draw"
 movement_methods["love.graphics.draw"].next = "love.graphics.translate"
 movement_methods["love.graphics.translate"].next = "none"
-movement_methods["none"].next = "vertex_shader"
+movement_methods["none"].next = "love.graphics.draw"
 
+rotation_methods = {
+   ["love.graphics.draw"] = {},
+   ["love.graphics.rotate"] = {},
+   ["none"] = {},
+}
+rotation_methods["love.graphics.draw"].next = "love.graphics.rotate"
+rotation_methods["love.graphics.rotate"].next = "none"
+rotation_methods["none"].next = "love.graphics.draw"
 
 -- Configuration of the sides
 both_sides = {
@@ -63,6 +69,7 @@ left_side = {
    hovered = false,
    offset = {0, 0},
    scale = base_scale,
+   rotation = 0,
    scaling_method = both_sides.scaling_method,
    movement_method = both_sides.movement_method,
    rotation_method = both_sides.rotation_method,
@@ -76,6 +83,7 @@ right_side = {
    hovered = false,
    offset = {0, 0},
    scale = base_scale,
+   rotation = 0,
    scaling_method = both_sides.scaling_method,
    movement_method = both_sides.movement_method,
    rotation_method = both_sides.rotation_method,
@@ -114,11 +122,11 @@ function love.load()
    left_side.current_texture = left_side.sprite
    right_side.current_texture = right_side.padded_sprite
 
-  -- Set appropriate filters
-  left_side.sprite:setFilter(left_side.filter, left_side.filter)
-  left_side.padded_sprite:setFilter(left_side.filter, left_side.filter)
-  right_side.sprite:setFilter(right_side.filter, right_side.filter)
-  right_side.padded_sprite:setFilter(right_side.filter, right_side.filter)
+   -- Set appropriate filters
+   left_side.sprite:setFilter(left_side.filter, left_side.filter)
+   left_side.padded_sprite:setFilter(left_side.filter, left_side.filter)
+   right_side.sprite:setFilter(right_side.filter, right_side.filter)
+   right_side.padded_sprite:setFilter(right_side.filter, right_side.filter)
 end
 
 function love.resize(w, h)
@@ -148,12 +156,18 @@ function love.update(dt)
    for _, side in pairs({left_side, right_side}) do
       -- Animate scaling   
       if side.scaling_method ~= "none" then
-         side.scale = base_scale + math.sin(time) * base_scale / 2
+         side.scale = base_scale + ((math.sin(time) + 1) / 2) * base_scale*2
       end
 
       -- Animate movement
-      if side.scaling_method ~= "none" then
-         side.offset[1] = math.sin(time) * gw/2
+      if side.movement_method ~= "none" then
+         side.offset[1] = math.sin(time*0.6) * gw/4
+         side.offset[2] = math.cos(time*0.3) * gh/2
+      end
+
+      -- Animate rotation
+      if side.rotation_method ~= "none" then
+         side.rotation = (time*0.1) % math.pi*2
       end
    end
 end
@@ -193,17 +207,9 @@ function draw_side(side, x, y)
    lg.translate(x, y)
 
    -- Set up scaling
-   local vertex_shader_scale = {1, 1}
    local lg_draw_scale = {1, 1}
    local lg_scale_scale = {1, 1}
-   if side.scaling_method == "vertex_shader" then
-      vertex_shader_scale[1] = side.scale
-      vertex_shader_scale[2] = side.scale
-      lg.translate(
-         (-1/vertex_shader_scale[1]) * gw,
-         (-1/vertex_shader_scale[2]) * gh
-      )
-   elseif side.scaling_method == "love.graphics.draw" then
+   if side.scaling_method == "love.graphics.draw" then
       lg_draw_scale[1] = side.scale
       lg_draw_scale[2] = side.scale
    elseif side.scaling_method == "love.graphics.scale" then
@@ -213,17 +219,36 @@ function draw_side(side, x, y)
          (lg_scale_scale[1] - 1) * (-gw/4),
          (lg_scale_scale[2] - 1) * (-gh/2)
       )
+      lg.scale(lg_scale_scale[1], lg_scale_scale[2])
+   else
+      lg_draw_scale[1] = base_scale
+      lg_draw_scale[2] = base_scale   
    end
 
-   -- Set up movement TODO:
-   local vertex_shader_offset = {0, 0}
+   -- Set up movement
    local lg_draw_offset = {0, 0}
-   local lg_translate_offset = {0, 0}
+   if side.movement_method == "love.graphics.draw" then
+      lg_draw_offset[1] = side.offset[1]
+      lg_draw_offset[2] = side.offset[2]
+   elseif side.movement_method == "love.graphics.translate" then
+      lg.translate(-side.offset[1], -side.offset[2])
+   end
 
-   -- TODO: Set up rotation
-
-   -- Scale the camera (zoom in/out)
-   lg.scale(lg_scale_scale[1], lg_scale_scale[2])
+   -- Set up rotation
+   local lg_draw_rotation = 0
+   if side.rotation_method == "love.graphics.draw" then
+      lg_draw_rotation = side.rotation
+   elseif side.rotation_method == "love.graphics.rotate" then
+      local cos = math.cos(side.rotation)
+      local sin = math.sin(side.rotation)
+      local x = -gw/4
+      local y = -gh/2
+      lg.translate(
+         gw/4 + x * cos - y * sin,
+         gh/2 + x * sin + y * cos
+      )
+      lg.rotate(side.rotation)
+   end
 
 
    -- Set up shaders
@@ -233,14 +258,14 @@ function draw_side(side, x, y)
       side.current_texture:getWidth(),
       side.current_texture:getHeight()
    })
-   sh:send("scale", vertex_shader_scale)
    
-   -- Draw texture multiple times
+   -- Move textures closer together if we're zooming so we can see all of them.
    local hm = horiz_tile_margin
    local vm = vert_tile_margin
-   if lg_scale_scale[1] ~= 1 or vertex_shader_scale[1] ~= 1 then hm = hm / 6 end
-   if lg_scale_scale[2] ~= 1 or vertex_shader_scale[2] ~= 1 then vm = vm / 6 end
+   if lg_scale_scale[1] ~= 1 then hm = hm / 6 end
+   if lg_scale_scale[2] ~= 1 then vm = vm / 6 end
 
+   -- Draw texture multiple times
    for j=1, vert_tile do
       local vert_idx = (j-1) - (vert_tile-1)/2
       for i=1, horiz_tile do
@@ -249,7 +274,7 @@ function draw_side(side, x, y)
             side.current_texture,
             gw/4 + lg_draw_offset[1] + hm * horiz_idx,
             gh/2 + lg_draw_offset[2] + vm * vert_idx,
-            0, -- TODO: rotation
+            lg_draw_rotation,
             lg_draw_scale[1], lg_draw_scale[2],
             side.current_texture:getWidth()/2, side.current_texture:getHeight()/2
          )
