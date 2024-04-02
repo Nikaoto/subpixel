@@ -69,7 +69,7 @@ left_side = {
 }
 right_side = {
    filter = "linear",
-   shader_name = "subpixel_d7samurai",
+   shader_name = "subpixel",
    sprite = lg.newImage("gnippie.png"),
    padded_sprite = nil,
    current_texture = nil,
@@ -113,6 +113,12 @@ function love.load()
    -- Set textures to use from the start
    left_side.current_texture = left_side.sprite
    right_side.current_texture = right_side.padded_sprite
+
+  -- Set appropriate filters
+  left_side.sprite:setFilter(left_side.filter, left_side.filter)
+  left_side.padded_sprite:setFilter(left_side.filter, left_side.filter)
+  right_side.sprite:setFilter(right_side.filter, right_side.filter)
+  right_side.padded_sprite:setFilter(right_side.filter, right_side.filter)
 end
 
 function love.resize(w, h)
@@ -193,12 +199,20 @@ function draw_side(side, x, y)
    if side.scaling_method == "vertex_shader" then
       vertex_shader_scale[1] = side.scale
       vertex_shader_scale[2] = side.scale
+      lg.translate(
+         (-1/vertex_shader_scale[1]) * gw,
+         (-1/vertex_shader_scale[2]) * gh
+      )
    elseif side.scaling_method == "love.graphics.draw" then
       lg_draw_scale[1] = side.scale
       lg_draw_scale[2] = side.scale
    elseif side.scaling_method == "love.graphics.scale" then
       lg_scale_scale[1] = side.scale
       lg_scale_scale[2] = side.scale
+      lg.translate(
+         (lg_scale_scale[1] - 1) * (-gw/4),
+         (lg_scale_scale[2] - 1) * (-gh/2)
+      )
    end
 
    -- Set up movement TODO:
@@ -208,12 +222,6 @@ function draw_side(side, x, y)
 
    -- TODO: Set up rotation
 
-   -- Translate the camera in such a way as to make lg.scale zoom into the
-   -- CENTER of our texture.
-   lg.translate(
-      (lg_scale_scale[1] - 1) * (-gw/4),
-      (lg_scale_scale[2] - 1) * (-gh/2)
-   )
    -- Scale the camera (zoom in/out)
    lg.scale(lg_scale_scale[1], lg_scale_scale[2])
 
@@ -225,13 +233,13 @@ function draw_side(side, x, y)
       side.current_texture:getWidth(),
       side.current_texture:getHeight()
    })
-   sh:send("vertScale", vertex_shader_scale)
+   sh:send("scale", vertex_shader_scale)
    
    -- Draw texture multiple times
    local hm = horiz_tile_margin
    local vm = vert_tile_margin
-   if lg_scale_scale[1] ~= 1 then hm = hm / 6 end
-   if lg_scale_scale[2] ~= 1 then vm = vm / 6 end
+   if lg_scale_scale[1] ~= 1 or vertex_shader_scale[1] ~= 1 then hm = hm / 6 end
+   if lg_scale_scale[2] ~= 1 or vertex_shader_scale[2] ~= 1 then vm = vm / 6 end
 
    for j=1, vert_tile do
       local vert_idx = (j-1) - (vert_tile-1)/2
