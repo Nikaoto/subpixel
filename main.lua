@@ -3,11 +3,16 @@ fmt = string.format
 gw = 1280
 gh = 720
 base_scale = 10
-vert_tile_margin = 260
-horiz_tile_margin = 200
+vert_tile_margin = 280
+horiz_tile_margin = 220
 horiz_tile = 3
 vert_tile = 3
 move = true
+font = lg.newFont(14, "light")
+
+text_color = {0/255, 82/255, 229/255, 1}
+text_box_color_hovered = {1, 0.85, 0.7, 0.9}
+text_box_color_unhovered = {1, 0.85, 0.7, 0.5}
 
 shaders = {
    subpixel = { sh = lg.newShader("subpixel.frag", "scale.vert") },
@@ -24,16 +29,31 @@ scaling_methods = {
    ["vertex_shader"] = {},
    ["love.graphics.draw"] = {},
    ["love.graphics.scale"] = {},
+   ["none"] = {},
 }
 scaling_methods["vertex_shader"].next = "love.graphics.draw"
 scaling_methods["love.graphics.draw"].next = "love.graphics.scale"
-scaling_methods["love.graphics.scale"].next = "vertex_shader"
+scaling_methods["love.graphics.scale"].next = "none"
+scaling_methods["none"].next = "vertex_shader"
+
+movement_methods = {
+   ["vertex_shader"] = {},
+   ["love.graphics.draw"] = {},
+   ["love.graphics.translate"] = {},
+   ["none"] = {},
+}
+movement_methods["vertex_shader"].next = "love.graphics.draw"
+movement_methods["love.graphics.draw"].next = "love.graphics.translate"
+movement_methods["love.graphics.translate"].next = "none"
+movement_methods["none"].next = "vertex_shader"
 
 
-animate_scaling = true
-animate_movement = false
-animate_rotation = false
-
+-- Configuration of the sides
+both_sides = {
+   scaling_method = "love.graphics.draw",
+   movement_method = "none",
+   rotation_method = "none",
+}
 left_side = {
    filter = "nearest",
    shader_name = "none",
@@ -43,9 +63,9 @@ left_side = {
    hovered = false,
    offset = {0, 0},
    scale = base_scale,
-   movement_method = "",
-   scaling_method = "love.graphics.draw",
-   rotation_method = "",
+   scaling_method = both_sides.scaling_method,
+   movement_method = both_sides.movement_method,
+   rotation_method = both_sides.rotation_method,
 }
 right_side = {
    filter = "linear",
@@ -56,9 +76,9 @@ right_side = {
    hovered = false,
    offset = {0, 0},
    scale = base_scale,
-   movement_method = "",
-   scaling_method = "love.graphics.scale",
-   rotation_method = "",
+   scaling_method = both_sides.scaling_method,
+   movement_method = both_sides.movement_method,
+   rotation_method = both_sides.rotation_method,
 }
 
 function pad_texture(tex, pad)
@@ -118,34 +138,16 @@ function love.update(dt)
       right_side.hovered = false
    end
 
-   -- Animate movement
-
-   -- Animate scaling
    local time = love.timer.getTime()
-
-   -- local scale = 1
-   -- local x, y
-   -- if move then
-   --    x = gw/4 + math.sin(time) * 10
-   --    y = math.sin(time*2 + 10) * 10
-   --    scale = math.sin(time) + 14
-   -- else
-   --    x = gw/4
-   --    y = gh/4
-   --    scale = 1
-   -- end
-
-   
-   -- Zoom screen
-   -- lg.push()
-   -- local s = math.sin(time * 0.3) + 1.1
-   -- lg.scale(s)
-   -- lg.translate(1/s * gw/2 - gw/2, 1/s * gh/2 - gh/2)
-
-   -- Animate scaling
-   if animate_scaling then
-      for _, side in pairs({left_side, right_side}) do
+   for _, side in pairs({left_side, right_side}) do
+      -- Animate scaling   
+      if side.scaling_method ~= "none" then
          side.scale = base_scale + math.sin(time) * base_scale / 2
+      end
+
+      -- Animate movement
+      if side.scaling_method ~= "none" then
+         side.offset[1] = math.sin(time) * gw/2
       end
    end
 end
@@ -153,30 +155,24 @@ end
 function draw_side_info(side, x, y)
    local mar = 5
    local pad = 5
-   local w = mar*2 + 260
-   local h = mar*2 + 130
+   local w = mar*2 + 340
+   local h = mar*2 + 50
    local r = 5
 
    -- Draw background
    if side.hovered then
-      lg.setColor(235/255, 201/255, 63/255, 0.7)
+      lg.setColor(text_box_color_hovered)
    else
-      lg.setColor(235/255, 201/255, 63/255, 0.3)
+      lg.setColor(text_box_color_unhovered)
    end
    lg.rectangle("fill", x + mar, y + mar, w, h, r, r)
 
    -- Draw info text
-   lg.setColor(63/255, 123/255, 235/255, 1)   
+   lg.setColor(text_color)
    lg.print(
       fmt("1) texture_filter: %s\n", side.current_texture:getFilter()) ..
       fmt("2) shader: %s\n", side.shader_name) ..
-      fmt("3) padding: %s\n", side.current_texture == side.padded_sprite) ..
-      fmt("4) scaling_method: %s\n", side.scaling_method) ..
-      fmt("5) movement_method: %s\n", side.movement_method) ..
-      fmt("6) rotation_method: %s\n", side.rotation_method) ..
-      fmt("7) animate_scaling: %s\n", animate_scaling) ..
-      fmt("8) animate_movement: %s\n", animate_movement) ..
-      fmt("9) animate_rotation: %s\n", animate_rotation),
+      fmt("3) padding: %s\n", side.current_texture == side.padded_sprite),
       x + pad + mar, y + pad + mar
    )
 end
@@ -186,6 +182,9 @@ function draw_side(side, x, y)
    lg.setColor(1, 1, 1, 1)
    lg.rectangle("fill", x, y, gw/2, gh)
    lg.setScissor(x, y, gw/2, gh)
+
+   lg.push()
+   lg.translate(x, y)
 
    -- Set up scaling
    local vertex_shader_scale = {1, 1}
@@ -202,20 +201,22 @@ function draw_side(side, x, y)
       lg_scale_scale[2] = side.scale
    end
 
-   -- TODO: Set up movement
+   -- Set up movement TODO:
+   local vertex_shader_offset = {0, 0}
    local lg_draw_offset = {0, 0}
    local lg_translate_offset = {0, 0}
 
    -- TODO: Set up rotation
 
-   -- Apply the transformations.
-   -- This does nothing if the respective method is not selected.
-   lg.push()
+   -- Translate the camera in such a way as to make lg.scale zoom into the
+   -- CENTER of our texture.
    lg.translate(
-      (lg_scale_scale[1] - 1) * gw/2,
-      (lg_scale_scale[2] - 1) * gh/2
+      (lg_scale_scale[1] - 1) * (-gw/4),
+      (lg_scale_scale[2] - 1) * (-gh/2)
    )
+   -- Scale the camera (zoom in/out)
    lg.scale(lg_scale_scale[1], lg_scale_scale[2])
+
 
    -- Set up shaders
    local sh = shaders[side.shader_name].sh
@@ -227,14 +228,19 @@ function draw_side(side, x, y)
    sh:send("vertScale", vertex_shader_scale)
    
    -- Draw texture multiple times
+   local hm = horiz_tile_margin
+   local vm = vert_tile_margin
+   if lg_scale_scale[1] ~= 1 then hm = hm / 6 end
+   if lg_scale_scale[2] ~= 1 then vm = vm / 6 end
+
    for j=1, vert_tile do
       local vert_idx = (j-1) - (vert_tile-1)/2
       for i=1, horiz_tile do
          local horiz_idx = (i-1) - (horiz_tile-1)/2
          lg.draw(
             side.current_texture,
-            x + gw/4 + lg_draw_offset[1] + horiz_tile_margin * horiz_idx,
-            y + gh/2 + lg_draw_offset[2] + vert_tile_margin * vert_idx,
+            gw/4 + lg_draw_offset[1] + hm * horiz_idx,
+            gh/2 + lg_draw_offset[2] + vm * vert_idx,
             0, -- TODO: rotation
             lg_draw_scale[1], lg_draw_scale[2],
             side.current_texture:getWidth()/2, side.current_texture:getHeight()/2
@@ -252,6 +258,32 @@ function draw_side(side, x, y)
 end
 
 function love.keypressed(k)
+   -- Settings for both sides
+   -- Cycle scaling method
+   if k == "4" then
+      both_sides.scaling_method = scaling_methods[both_sides.scaling_method].next
+      left_side.scaling_method = both_sides.scaling_method
+      right_side.scaling_method = both_sides.scaling_method
+      return
+   end
+
+   -- Cycle movement method
+   if k == "5" then
+      both_sides.movement_method = movement_methods[both_sides.movement_method].next
+      left_side.movement_method = both_sides.movement_method
+      right_side.movement_method = both_sides.movement_method
+      return
+   end
+
+   -- Cycle rotation method
+   if k == "6" then
+      both_sides.rotation_method = rotation_methods[both_sides.rotation_method].next
+      left_side.rotation_method = both_sides.rotation_method
+      right_side.rotation_method = both_sides.rotation_method
+      return
+   end
+
+   -- Settings for a single side (currently hovered)
    local side
    if left_side.hovered then
       side = left_side
@@ -281,53 +313,40 @@ function love.keypressed(k)
          side.sprite or side.padded_sprite
       return
    end
-
-   -- Cycle scaling method
-   if k == "4" then
-      side.scaling_method = scaling_methods[side.scaling_method].next
-      return
-   end
-
-   -- Cycle movement method
-   if k == "5" then
-      --side.movement_method = movement_methods[side.movement_method].next
-      return
-   end
-
-   -- Cycle rotation method
-   if k == "6" then
-      --side.rotation_method = rotation_methods[side.rotation_method].next
-      return
-   end
-
-   if k == "7" then
-      animate_scaling = not animate_scaling
-      return
-   end
-
-   if k == "8" then
-      animate_movement = not animate_movement
-      return
-   end
-
-   if k == "9" then
-      animate_rotation = not animate_rotation
-      return
-   end
 end
 
 function love.draw()
    lg.clear(1, 1, 1, 1)
+   lg.setFont(font)
 
    -- Draw the sides
    draw_side(left_side, 0, 0)
    draw_side(right_side, gw/2, 0)
 
+   -- Draw both_sides info in the bottom center
+   local mar = 5
+   local pad = 5
+   local w = mar*2 + 340
+   local h = mar*2 + 48
+   local br = 5
+   local x = gw/2 - w/2 - pad
+   local y = gh - h
+
+   -- Draw background
+   lg.setColor(text_box_color_hovered)
+   lg.rectangle("fill", x, y, w, h, br, br)
+
+   -- Draw info text
+   lg.setColor(text_color)
+   lg.print(
+      fmt("4) scaling_method: %s\n", both_sides.scaling_method) ..
+      fmt("5) movement_method: %s\n", both_sides.movement_method) ..
+      fmt("6) rotation_method: %s\n", both_sides.rotation_method),
+      x + pad, y + pad
+   )
+
    -- Draw separating line
    local t = 1
    lg.setColor(0, 0, 0, 1)
-   lg.rectangle("fill", gw/2 - t, 0, t*2, gh)
-
-   draw_side_info(left_side, 0, 0)
-   draw_side_info(right_side, gw/2, 0)
+   lg.rectangle("fill", gw/2 - t, 0, t*2, gh - h)
 end
