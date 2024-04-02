@@ -1,13 +1,11 @@
 #pragma language glsl3
 
 uniform vec2 texture_size;
-uniform float scale;
 
 // Based on CptPotato's smooth pixel filtering shader.
 // Preconditions the uv for the default bilinear filter.
 vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
 {
-    uv /= scale;
     vec2 texel_size = vec2(1.0) / texture_size;
 
     uv -= texel_size * vec2(0.5);

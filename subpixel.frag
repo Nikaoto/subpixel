@@ -1,12 +1,10 @@
 #pragma language glsl3
 
 uniform vec2 texture_size;
-uniform float scale;
 
 // A mix of nearest neighbor and bilinear that reduces jittering for pixelart.
 vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
 {
-    uv /= scale;
     vec2 texel_size = vec2(1.0) / texture_size;
 
     uv -= texel_size * vec2(0.5);
