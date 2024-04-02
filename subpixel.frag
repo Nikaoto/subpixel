@@ -1,26 +1,20 @@
-// Subpixel filtering - a mix of nearest neighbor and bilinear that reduces
-// jittering for pixelart.
-
 #pragma language glsl3
 
 uniform vec2 texture_size;
 uniform float scale;
 
+// A mix of nearest neighbor and bilinear that reduces jittering for pixelart.
 vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
 {
     uv /= scale;
     vec2 texel_size = vec2(1.0) / texture_size;
 
-    vec2 xy = uv * texture_size;
-    vec2 xy_center = floor(xy) + 0.5;
-    xy_center += 1.0 - clamp((1.0 - fract(xy)) * scale, 0.0, 1.0);
-    return color * texture2D(tex, xy_center / texture_size);
-    // uv -= texel_size * vec2(0.5);
-    // vec2 uvPixels = uv * texture_size;
-    // vec2 deltaPixel = fract(uvPixels) - vec2(0.5);
-    // vec2 ddxy = fwidth(uvPixels);
-    // vec2 mip = log2(ddxy) - 0.5;
-    // return color * textureLod(tex, uv + (clamp(deltaPixel / ddxy, 0.0, 1.0) - deltaPixel) * texel_size, min(mip.x, mip.y));
+    uv -= texel_size * vec2(0.5);
+    vec2 uvPixels = uv * texture_size;
+    vec2 deltaPixel = fract(uvPixels) - vec2(0.5);
+    vec2 ddxy = fwidth(uvPixels);
+    vec2 mip = log2(ddxy) - 0.5;
+    return color * textureLod(tex, uv + (clamp(deltaPixel / ddxy, 0.0, 1.0) - deltaPixel) * texel_size, min(mip.x, mip.y));
 
     // vec2 ddx = dFdx(uv);
     // vec2 ddy = dFdy(uv);

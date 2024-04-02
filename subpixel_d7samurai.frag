@@ -1,11 +1,10 @@
-// Subpixel filtering based on d7samurai's version.
-// Preconditions the uv coordinates for bilinear filtering.
-
 #pragma language glsl3
 
 uniform vec2 texture_size;
 uniform float scale;
 
+// Subpixel filtering based on d7samurai's version.
+// Preconditions the uv coordinates for bilinear filtering.
 vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
 {
     uv /= scale;
