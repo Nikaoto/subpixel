@@ -14,5 +14,7 @@ shaders and movement types and compare them side-by-side with each other.
   to cycle between the filter/shader/padding.
 
 **Left** - nearest neighbor sampling. **Right** - subpixel sampling.
+
 ![](scaling.gif)
+
 ![](rotation.gif)
