@@ -5,18 +5,13 @@ games unfortunately), the sprites will experience jitter and artefacting during
 scaling/rotation/movement. This repo aims to demonstrate the solution in simple
 terms.
 
-**Scaling:**
-
-Left - default.
-
-Right - subpixel sampling.
+### Scaling
+**Left** - default. **Right** - subpixel sampling.
 
 ![](scaling.gif)
 
-**Rotation:**
-
-Left - default.
-Right - subpixel sampling.
+### Rotation
+**Left** - default. **Right** - subpixel sampling.
 
 ![](rotation.gif)
 
