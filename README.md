@@ -1,7 +1,7 @@
 # Subpixel sampling
 Test texture sampling for smooth pixel art in love2d. When doing
 nearest-neighbor sampling on pixel art (which is the default for most pixel-art
-games unfortunately), the sprites will experience jitter and artefacting during
+games unfortunately), the sprites will experience jitter and artifacting during
 scaling/rotation/movement. This repo aims to demonstrate the solution in simple
 terms.
 

@@ -36,7 +36,7 @@ vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
 
     // When the texture is rendered at smaller sizes (when the pixel size is larger
     // than the texel size), we can skip the preconditioning and just do a
-    // bilinear filter. Without this, we get artefacts at small sizes.
+    // bilinear filter. Without this, we get artifacts at small sizes.
     if (fw.x < 1.0/texture_size.x && fw.y < 1.0/texture_size.y) {
 
         // We can use the pixel size (fw) to calculate the edges of the pixel in
