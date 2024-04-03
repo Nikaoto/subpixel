@@ -16,12 +16,14 @@ text_box_color_unhovered = {1, 0.85, 0.7, 0.5}
 
 shaders = {
    subpixel = { sh = lg.newShader("subpixel.frag") },
+   subpixel_grad = { sh = lg.newShader("subpixel_grad.frag") },
    subpixel_lod = { sh = lg.newShader("subpixel_lod.frag") },
    subpixel_d7samurai = { sh = lg.newShader("subpixel_d7samurai.frag") },
    none = { sh = lg.newShader("default.frag") },
    bilinear = { sh = lg.newShader("bilinear.frag") },
 }
-shaders.subpixel.next = "subpixel_lod"
+shaders.subpixel.next = "subpixel_grad"
+shaders.subpixel_grad.next = "subpixel_lod"
 shaders.subpixel_lod.next = "subpixel_d7samurai"
 shaders.subpixel_d7samurai.next = "none"
 shaders.none.next = "bilinear"
