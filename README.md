@@ -15,6 +15,4 @@ shaders and movement types and compare them side-by-side with each other.
 
 **Left** - nearest neighbor sampling. **Right** - subpixel sampling.
 
-![](scaling.gif)
-
-![](rotation.gif)
+![](scaling.gif) ![](rotation.gif)
