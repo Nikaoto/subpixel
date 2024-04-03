@@ -11,14 +11,14 @@ vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
 
     vec2 ddx = dFdx(uv);
     vec2 ddy = dFdy(uv);
-    vec2 lxy = sqrt(ddx * ddx + ddy * ddy); // size of the screen pixel in uv
+    vec2 fw = abs(ddx) + abs(ddy); // size of the screen pixel in uv
 
     vec2 xy = uv * texture_size;
     vec2 xy_floor = round(xy) - vec2(0.5);
     vec2 f = xy - xy_floor;
     vec2 f_uv = f * texel_size - vec2(0.5) * texel_size;
 
-    f = clamp(f_uv / lxy + vec2(0.5), 0.0, 1.0);
+    f = clamp(f_uv / fw + vec2(0.5), 0.0, 1.0);
 
     uv = xy_floor * texel_size;
 

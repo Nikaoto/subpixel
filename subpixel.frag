@@ -3,8 +3,8 @@
 uniform vec2 texture_size;
 uniform vec2 scale;
 
-// A mix of nearest neighbor and bilinear that reduces jittering for pixelart.
-// For educational purposes, it is verbose and unoptimized.
+// A mix of nearest neighbor and bilinear sampling that reduces jittering for
+// pixelart. For educational purposes, it is verbose and unoptimized.
 
 // Follows the method described by cmuratori in "Handmade Hero Chat 018":
 // https://youtu.be/Yu8k7a1hQuU?si=-6iUHnSHjCQjFfZ7&t=4880
@@ -14,6 +14,9 @@ uniform vec2 scale;
 // snapping the uv to texel centers for pixels which are completely inside the
 // texel. For the pixels bordering the texel edges, their uvs are placed at the
 // point where the bilinear filter will blend according to coverage.
+//
+// Since we manually do a bilinear filter, the texture filter in love2d can be
+// set to the "nearest" setting and it will still work.
 vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
 {
 
@@ -24,9 +27,11 @@ vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
     // terms, this is the pixel size in uv.
     //
     // It can also be calculated by:
-    //     sqrt(dFdx(uv) * dFdx(uv) + dFdy(uv) * dFdy(uv));
-    // Where dFdx(uv) and dFdy(uv) are the rates of change of pixel x and y
-    // coords in uv.
+    //     abs(dFdx(uv)) + abs(dFdx(uv))
+    //
+    // Where dFdx(uv) and dFdy(uv) give us the rates of change of pixel x and y
+    // coords in uv. In other words, the width and the height of the screen
+    // pixel in uv.
     vec2 fw = fwidth(uv);
 
     // We can use the pixel size (fw) to calculate the edges of the pixel in uv
