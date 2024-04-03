@@ -114,6 +114,7 @@ function pad_texture(tex, pad)
 end
 
 function love.load()
+   love.window.setTitle("subpixel")
    love.window.setMode(gw, gh, {resizable = true, vsync = 1})
 
    -- Make 1px padded versions of the sprites
@@ -158,7 +159,7 @@ function love.update(dt)
    for _, side in pairs({left_side, right_side}) do
       -- Animate scaling   
       if side.scaling_method ~= "none" then
-         side.scale = base_scale + ((math.sin(time) + 1) / 2) * base_scale*2
+         side.scale = base_scale/8 + (math.sin(time / 2) + 1) * base_scale*2
       end
 
       -- Animate movement

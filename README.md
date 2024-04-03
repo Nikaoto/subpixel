@@ -1,19 +1,18 @@
 # Subpixel sampling
-Testing texture sampling and filtering in love2d.
+Texture sampling for smooth pixel art in love2d. When doing nearest-neighbor
+sampling on pixel art (which is the default for most pixel-art games
+unfortunately), the sprites will experience jitter and artefacting during
+scaling/rotation/movement. This repo aims to demonstrate the solution in simple
+terms.
 
-The original aim was to find out how to adjust the rendering pipeline of love2d
-to draw pixel art sprites without jitter.
+Clone the repo and run `love .` from inside. You can try out multiple different
+shaders and movement types and compare them side-by-side with each other.
+![](./screenshot.png)
 
-- 3 demos: scale, move, rotate, none
-- camera movement with mouse
-- toggle 1px border
-- toggle between love2d filters(nearest, linear)
-- toggle between shaders (subpixel-niko, subpixel-lod, subpixel-grad, subpixel-precond-d7samurai, billinear, none)
-- toggle movevment type (vertex shader, love.graphics.draw, love.graphics.translate)
-- toggle scaling type (vertex shader, love.graphics.draw, love.graphics.scale)
-- toggle rotation type (vertex shader, love.graphics.draw, love.graphics.rotate)
+- Use keypad numbers 4/5/6 to cycle between movement/rotation/scaling methods.
+- Hover over your desired side with your mouse and use the keypad numbers 1/2/3
+  to cycle between the filter/shader/padding.
 
-
-# Notable discoveries
-- Using `sx` and `sy` when doing `love.graphics.draw` does not work with the
-  shader, but doing `love.graphics.scale` instead for scaling works.
+**Left** - nearest neighbor sampling. **Right** - subpixel sampling.
+![](scaling.gif)
+![](rotation.gif)

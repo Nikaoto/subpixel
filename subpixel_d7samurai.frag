@@ -2,7 +2,9 @@
 
 uniform vec2 texture_size;
 
-// Subpixel filtering based on d7samurai's version.
+// Subpixel filtering based on d7samurai's version:
+// https://www.shadertoy.com/view/MlB3D3
+//
 // Preconditions the uv coordinates for bilinear filtering.
 vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
 {

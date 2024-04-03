@@ -34,37 +34,45 @@ vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
     // pixel in uv.
     vec2 fw = fwidth(uv);
 
-    // We can use the pixel size (fw) to calculate the edges of the pixel in uv
-    // so we can do bounds checking later.
-    vec2 mins = (uv - 0.5 * fw) * texture_size;
-    vec2 maxes = (uv + 0.5 * fw) * texture_size;
+    // When the texture is rendered at smaller sizes (when the pixel size is larger
+    // than the texel size), we can skip the preconditioning and just do a
+    // bilinear filter. Without this, we get artefacts at small sizes.
+    if (fw.x < 1.0/texture_size.x && fw.y < 1.0/texture_size.y) {
 
-    // When the pixel is completely inside the texel horizontally, snap the u
-    // value to the center.
-    if (mins.x >= floor(uv.x * texture_size.x) &&
-        maxes.x < ceil(uv.x * texture_size.x)) {
-        uv.x = (floor(mins.x) + 0.5) / texture_size.x;
-    } else {
-        // Pixel is at the edge. Blend between the two texels based on coverage.
-        float right_side_coverage = fract(maxes.x);
-        float sum = maxes.x - mins.x;
-        float left_offset = (right_side_coverage / sum);
-        float u_tex_center = floor(mins.x) + 0.5;
-        uv.x = (u_tex_center + left_offset) / texture_size.x;
-    }
+        // We can use the pixel size (fw) to calculate the edges of the pixel in
+        // uv so we can do bounds checking later.
+        vec2 mins = (uv - 0.5 * fw) * texture_size;
+        vec2 maxes = (uv + 0.5 * fw) * texture_size;
 
-    // When the pixel is completely inside the texel vertically, snap the v
-    // value to the center.
-    if (mins.y >= floor(uv.y * texture_size.y) &&
-        maxes.y < ceil(uv.y * texture_size.y)) {
-        uv.y = (floor(mins.y) + 0.5) / texture_size.y;
-    } else {
-        // Pixel is at the edge. Blend between the two texels based on coverage.
-        float bottom_side_coverage = fract(maxes.y);
-        float sum = maxes.y - mins.y;
-        float top_offset = bottom_side_coverage / sum;
-        float u_tex_center = floor(mins.y) + 0.5;
-        uv.y = (u_tex_center + top_offset) / texture_size.y;
+        // When the pixel is completely inside the texel horizontally, snap the
+        // u value to the center.
+        if (mins.x >= floor(uv.x * texture_size.x) &&
+            maxes.x < ceil(uv.x * texture_size.x)) {
+            uv.x = (floor(mins.x) + 0.5) / texture_size.x;
+        } else {
+            // Pixel is at the edge. Blend between the two texels based on
+            // coverage.
+            float right_side_coverage = fract(maxes.x);
+            float sum = maxes.x - mins.x;
+            float left_offset = (right_side_coverage / sum);
+            float u_tex_center = floor(mins.x) + 0.5;
+            uv.x = (u_tex_center + left_offset) / texture_size.x;
+        }
+
+        // When the pixel is completely inside the texel vertically, snap the v
+        // value to the center.
+        if (mins.y >= floor(uv.y * texture_size.y) &&
+            maxes.y < ceil(uv.y * texture_size.y)) {
+            uv.y = (floor(mins.y) + 0.5) / texture_size.y;
+        } else {
+            // Pixel is at the edge. Blend between the two texels based on
+            // coverage.
+            float bottom_side_coverage = fract(maxes.y);
+            float sum = maxes.y - mins.y;
+            float top_offset = bottom_side_coverage / sum;
+            float u_tex_center = floor(mins.y) + 0.5;
+            uv.y = (u_tex_center + top_offset) / texture_size.y;
+        }
     }
 
     // Bilinear filter
