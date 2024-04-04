@@ -5,10 +5,10 @@ uniform vec2 scale;
 
 // A mix of nearest neighbor and bilinear sampling that reduces jittering for
 // pixelart. For educational purposes, it is verbose and unoptimized.
-
+//
 // Follows the method described by cmuratori in "Handmade Hero Chat 018":
 // https://youtu.be/Yu8k7a1hQuU?si=-6iUHnSHjCQjFfZ7&t=4880
-
+//
 // The first half of this shader preconditions the uv coordinates for the second
 // half of the shader (which is a simple bilinear filter). We do this by
 // snapping the uv to texel centers for pixels which are completely inside the
@@ -17,9 +17,11 @@ uniform vec2 scale;
 //
 // Since we manually do a bilinear filter, the texture filter in love2d can be
 // set to the "nearest" setting and it will still work.
+//
+// For a production-ready, optimized and terse version, look at
+// 'subpixel_grad.frag' or 'subpixel_d7samurai.frag'.
 vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
 {
-
     // fwidth stands for "fragment width". According to OpenGL specs, it gives
     // us the "sum of the absolute derivatives in x and y using local
     // differencing for the input argument". Simply put, this gives us the
@@ -34,9 +36,9 @@ vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
     // pixel in uv.
     vec2 fw = fwidth(uv);
 
-    // When the texture is rendered at smaller sizes (when the pixel size is larger
-    // than the texel size), we can skip the preconditioning and just do a
-    // bilinear filter. Without this, we get artifacts at small sizes.
+    // When the texture is rendered at smaller sizes (when the pixel size is
+    // larger than the texel size), we can skip the preconditioning and just do
+    // a bilinear filter. Without this, we get artifacts at small sizes.
     if (fw.x < 1.0/texture_size.x && fw.y < 1.0/texture_size.y) {
 
         // We can use the pixel size (fw) to calculate the edges of the pixel in
