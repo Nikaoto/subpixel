@@ -89,9 +89,9 @@ vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
     vec4 p11 = texture(tex, (xy_floor + vec2(1.0, 1.0) + 0.5) / texture_size);
 
     // Blend them accordingly
-    vec4 pX0 = p00 * (1 - f.x) + p10 * f.x;
-    vec4 pX1 = p01 * (1 - f.x) + p11 * f.x;
-    vec4 pXX = pX0 * (1 - f.y) + pX1 * f.y;
+    vec4 pX0 = p00 * (1.0 - f.x) + p10 * f.x;
+    vec4 pX1 = p01 * (1.0 - f.x) + p11 * f.x;
+    vec4 pXX = pX0 * (1.0 - f.y) + pX1 * f.y;
 
     return pXX * color;
 }
