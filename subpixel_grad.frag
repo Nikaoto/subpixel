@@ -24,5 +24,5 @@ vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
 
     // Since we already have the derivatives, might as well use textureGrad
     // instead of texture2D to improve performance. No other reason.
-    return textureGrad(tex, uv + f * texel_size, ddx, ddy);
+    return color * textureGrad(tex, uv + f * texel_size, ddx, ddy);
 }
