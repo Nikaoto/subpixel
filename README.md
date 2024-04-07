@@ -32,7 +32,7 @@ To add this fix to your pixel art games, do the following:
 - Copy `subpixel_d7samurai.frag` or `subpixel_grad.frag` to your game's
   directory.
 - When drawing anything, you use the shader and send the texture size to it:
-```
+```lua
 subpixel_shader = love.graphics.newShader("subpixel_grad.frag")
 player_sprite = love.graphics.newImage("player.png")
 player_sprite:setFilter("linear", "linear") -- Important!
