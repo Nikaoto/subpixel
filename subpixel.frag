@@ -29,7 +29,7 @@ vec4 effect(vec4 color, Image tex, vec2 uv, vec2 px)
     // terms, this is the pixel size in uv.
     //
     // It can also be calculated by:
-    //     abs(dFdx(uv)) + abs(dFdx(uv))
+    //     abs(dFdx(uv)) + abs(dFdy(uv))
     //
     // Where dFdx(uv) and dFdy(uv) give us the rates of change of pixel x and y
     // coords in uv. In other words, the width and the height of the screen
